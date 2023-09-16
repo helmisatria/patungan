@@ -42,7 +42,9 @@ export default function Index() {
   }, [date]);
 
   useEffect(() => {
-    setDate(new Date(formValues?.date));
+    if (formValues?.date) {
+      setDate(new Date(formValues?.date));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
