@@ -14,7 +14,7 @@ import type { SelectSingleEventHandler } from "react-day-picker";
 
 export interface DatePickerProps {
   date?: Date;
-  setDate?: SelectSingleEventHandler;
+  setDate?: SelectSingleEventHandler | ((date: Date) => void);
 }
 
 export function DatePicker({ date, setDate, ...props }: DatePickerProps) {
@@ -36,7 +36,7 @@ export function DatePicker({ date, setDate, ...props }: DatePickerProps) {
         <Calendar
           mode="single"
           selected={date}
-          onSelect={setDate}
+          onSelect={setDate as SelectSingleEventHandler}
           initialFocus
         />
       </PopoverContent>

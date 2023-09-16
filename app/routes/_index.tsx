@@ -1,13 +1,16 @@
 import type { V2_MetaFunction } from "@remix-run/cloudflare";
-import { CalendarIcon, DollarSign } from "lucide-react";
-import { Suspense, useEffect, useState, useTransition } from "react";
+import { DollarSign } from "lucide-react";
+import { useEffect } from "react";
 
-import Creatable, { useCreatable } from "react-select/creatable";
-import { useLocalStorage } from "react-use";
+import Creatable from "react-select/creatable";
+import { ClientOnly } from "remix-utils";
+import ParticipantsCheckBoxes from "~/components/app/Participants";
 import { DatePicker } from "~/components/ui/date-picker";
 
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import type { FormStateType } from "~/store/store";
+import { useFormStore } from "~/store/store";
 
 export const meta: V2_MetaFunction = () => {
   return [
@@ -17,42 +20,19 @@ export const meta: V2_MetaFunction = () => {
 };
 
 export default function Index() {
-  const [date, setDate] = useState<Date>();
+  const { setForm, ...formValues } = useFormStore();
 
-  const [formValues, setFormValues] = useLocalStorage("patungan", {
-    appName: "",
-    totalBiaya: "",
-    participants: [],
-    date: undefined,
-  } as Record<string, any>);
+  const onChangeDate = (date: Date) => {
+    setForm({ date: date });
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormValues({
-      ...formValues,
-      [e.target.name]: e.target.value,
-    });
+    setForm({ [e.target.name]: e.target.value });
   };
 
   useEffect(() => {
-    setFormValues({
-      ...formValues,
-      date: date,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [date]);
-
-  useEffect(() => {
-    if (formValues?.date) {
-      setDate(new Date(formValues?.date));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useFormStore.persist.rehydrate();
   }, []);
-
-  const options = [
-    { value: "chocolate", label: "Chocolate" },
-    { value: "strawberry", label: "Strawberry" },
-    { value: "vanilla", label: "Vanilla" },
-  ];
 
   return (
     <>
@@ -101,41 +81,52 @@ export default function Index() {
         </div>
 
         <div className="flex flex-col">
-          <Label className="pb-3" htmlFor="total-biaya">
+          <Label className="pb-3" htmlFor="active-from-date">
             Aktif dari
           </Label>
-          <DatePicker date={date} setDate={setDate} />
+          <DatePicker
+            date={formValues.date ? new Date(formValues.date) : undefined}
+            setDate={onChangeDate}
+          />
         </div>
 
         <div className="flex flex-col">
           <Label className="pb-3" htmlFor="participants">
             Participants
           </Label>
-          <Suspense>
-            <Creatable
-              defaultValue={formValues?.participants}
-              classNames={{
-                control: () =>
-                  `!border-input focus-visible:outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`,
-              }}
-              onChange={(e) => {
-                setFormValues({
-                  ...formValues,
-                  participants: e,
-                });
-              }}
-              name="participants"
-              styles={{
-                valueContainer: (provided) => ({
-                  ...provided,
-                  paddingLeft: "1rem",
-                }),
-              }}
-              closeMenuOnSelect={false}
-              isMulti
-              options={options}
-            />
-          </Suspense>
+          <ClientOnly
+            fallback={
+              <div className="block h-[38px] w-full border border-input rounded"></div>
+            }
+          >
+            {() => (
+              <>
+                <Creatable
+                  defaultValue={formValues?.participants}
+                  placeholder="Isi nama yang ikut patungan disini"
+                  classNames={{
+                    control: () =>
+                      `!border-input focus-visible:outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`,
+                  }}
+                  onChange={(values) => {
+                    setForm({
+                      participants: values as FormStateType["participants"],
+                    });
+                  }}
+                  name="participants"
+                  styles={{
+                    valueContainer: (provided) => ({
+                      ...provided,
+                      paddingLeft: "1rem",
+                    }),
+                  }}
+                  closeMenuOnSelect={false}
+                  isMulti
+                />
+              </>
+            )}
+          </ClientOnly>
+          <ParticipantsCheckBoxes />
         </div>
       </main>
     </>
