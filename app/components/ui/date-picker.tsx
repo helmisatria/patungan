@@ -17,25 +17,30 @@ export interface DatePickerProps {
   setDate?: SelectSingleEventHandler | ((date: Date) => void);
 }
 
-export function DatePicker({ date, setDate, ...props }: DatePickerProps) {
+export function DatePicker({
+  date = new Date(new Date().getFullYear(), 0, 1),
+  setDate,
+  ...props
+}: DatePickerProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button
           variant={"outline"}
           className={cn(
-            "w-[280px] justify-start text-left font-normal",
+            "w-full md:w-[280px] justify-start text-left font-normal",
             !date && "text-muted-foreground"
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? format(date, "PPP") : <span>Pick a date</span>}
+          {date ? format(date, "d MMMM yyyy") : <span>Pick a date</span>}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0">
         <Calendar
           mode="single"
           selected={date}
+          defaultMonth={date}
           onSelect={setDate as SelectSingleEventHandler}
           initialFocus
         />

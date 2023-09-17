@@ -41,6 +41,9 @@ dependencies:
   isbot:
     specifier: ^3.6.8
     version: 3.6.8
+  lodash-es:
+    specifier: ^4.17.21
+    version: 4.17.21
   lucide-react:
     specifier: ^0.277.0
     version: 0.277.0(react@18.2.0)
@@ -6176,6 +6179,10 @@ packages:
     dependencies:
       p-locate: 5.0.0
     dev: true
+
+  /lodash-es@4.17.21:
+    resolution: {integrity: sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==}
+    dev: false
 
   /lodash.camelcase@4.3.0:
     resolution: {integrity: sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA==}
