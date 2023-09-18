@@ -73,6 +73,12 @@ export default function Index() {
 
   useEffect(() => {
     useEditableForm.persist.rehydrate();
+
+    // set default start date if not exist
+    if (!useSavedForm.getState().startDate) {
+      setForm({ startDate: defaultStartDate });
+    }
+
     updateIsChanged();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
