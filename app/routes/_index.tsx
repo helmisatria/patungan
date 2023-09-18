@@ -11,8 +11,15 @@ import { DatePicker } from "~/components/ui/date-picker";
 
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import type { FormStateType } from "~/store/store-form";
-import { useEditableForm, useSavedForm } from "~/store/store-form";
+import type {
+  ComparableFormStateType,
+  FormStateType,
+} from "~/store/store-form";
+import {
+  defaultStartDate,
+  useEditableForm,
+  useSavedForm,
+} from "~/store/store-form";
 
 export const meta: V2_MetaFunction = () => {
   return [
@@ -46,9 +53,9 @@ export default function Index() {
       return new Date(date).toISOString();
     };
 
-    const pickForm = (form: any) => {
+    const pickForm = (form: ComparableFormStateType) => {
       return pick(
-        { ...form, startDate: convertDate(form.startDate) },
+        { ...form, startDate: convertDate(form.startDate || defaultStartDate) },
         comparableFields
       );
     };
@@ -67,7 +74,6 @@ export default function Index() {
   useEffect(() => {
     useEditableForm.persist.rehydrate();
     updateIsChanged();
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -126,7 +132,11 @@ export default function Index() {
             Patungan aktif dari
           </Label>
           <DatePicker
-            date={new Date(formValues.startDate)}
+            date={
+              formValues.startDate
+                ? new Date(formValues.startDate)
+                : defaultStartDate
+            }
             setDate={onChangeDate}
           />
         </div>
@@ -141,34 +151,31 @@ export default function Index() {
             }
           >
             {() => (
-              <>
-                <Creatable
-                  key={formValues?.participants?.length}
-                  defaultValue={formValues?.participants}
-                  placeholder="Isi nama yang ikut patungan disini"
-                  classNames={{
-                    control: () =>
-                      `!border-input focus-visible:outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`,
-                  }}
-                  onChange={(values) => {
-                    setForm({
-                      participants: values as FormStateType["participants"],
-                    });
-                  }}
-                  name="participants"
-                  styles={{
-                    valueContainer: (provided) => ({
-                      ...provided,
-                      paddingLeft: "1rem",
-                    }),
-                  }}
-                  backspaceRemovesValue={false}
-                  createOptionPosition="first"
-                  noOptionsMessage={() => "Kamu bisa menambahkan orang baru"}
-                  closeMenuOnSelect={false}
-                  isMulti
-                />
-              </>
+              <Creatable
+                key={formValues?.participants?.length}
+                defaultValue={formValues?.participants}
+                placeholder="Isi nama yang ikut patungan disini"
+                classNames={{
+                  control: () =>
+                    `!border-input focus-visible:outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`,
+                }}
+                onChange={(values) => {
+                  setForm({
+                    participants: values as FormStateType["participants"],
+                  });
+                }}
+                styles={{
+                  valueContainer: (provided) => ({
+                    ...provided,
+                    paddingLeft: "1rem",
+                  }),
+                }}
+                backspaceRemovesValue={false}
+                createOptionPosition="first"
+                noOptionsMessage={() => "Kamu bisa menambahkan orang baru"}
+                closeMenuOnSelect={false}
+                isMulti
+              />
             )}
           </ClientOnly>
           <ParticipantsCheckBoxes />
