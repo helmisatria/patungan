@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+export const defaultStartDate = new Date(new Date().getFullYear(), 0, 1);
+
 // Define your state type here
 export type FormStateType = {
   appName: string;
@@ -9,11 +11,16 @@ export type FormStateType = {
     value: string;
     label: string;
   }[]; // replace 'any' with the actual type of the participants
-  startDate: Date;
+  startDate: Date | undefined;
   setForm: (state: Partial<FormStateType>) => void;
   saveForm: () => void;
   resetForm: () => void;
 };
+
+export type ComparableFormStateType = Pick<
+  FormStateType,
+  "appName" | "totalBiaya" | "participants" | "startDate"
+>;
 
 export const useEditableForm = create<FormStateType>()(
   persist(
@@ -21,7 +28,7 @@ export const useEditableForm = create<FormStateType>()(
       appName: "",
       totalBiaya: "",
       participants: [],
-      startDate: new Date(new Date().getFullYear(), 0, 1),
+      startDate: undefined,
       setForm: (state: Partial<FormStateType>) => set(state),
       saveForm: () => {
         useSavedForm.setState({
@@ -55,7 +62,7 @@ export const useSavedForm = create<
       appName: "",
       totalBiaya: "",
       participants: [],
-      startDate: new Date(new Date().getFullYear(), 0, 1),
+      startDate: undefined,
       setForm: (state: Partial<FormStateType>) => set(state),
     }),
     {

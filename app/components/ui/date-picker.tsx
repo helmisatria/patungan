@@ -20,8 +20,13 @@ export interface DatePickerProps {
 export function DatePicker({
   date = new Date(new Date().getFullYear(), 0, 1),
   setDate,
-  ...props
 }: DatePickerProps) {
+  const [localDate, setLocalDate] = React.useState<string>();
+
+  React.useEffect(() => {
+    setLocalDate(format(date, "d MMMM yyyy"));
+  }, [date]);
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -33,7 +38,11 @@ export function DatePicker({
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? format(date, "d MMMM yyyy") : <span>Pick a date</span>}
+          {localDate ? (
+            localDate
+          ) : (
+            <span className="text-neutral-600">Pick a date</span>
+          )}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0">
