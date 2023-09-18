@@ -1,6 +1,6 @@
 import type { V2_MetaFunction } from "@remix-run/cloudflare";
 import { isEqual, pick } from "lodash-es";
-import { DollarSign, RefreshCwIcon } from "lucide-react";
+import { BanknoteIcon, UndoIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 import Creatable from "react-select/creatable";
@@ -11,6 +11,7 @@ import { DatePicker } from "~/components/ui/date-picker";
 
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import { cleanNumber } from "~/lib/helpers";
 import type {
   ComparableFormStateType,
   FormStateType,
@@ -96,6 +97,7 @@ export default function Index() {
           </Label>
           <Input
             onChange={handleChange}
+            placeholder="Nama aplikasi langganan"
             type="text"
             name="appName"
             id="app-name"
@@ -110,11 +112,12 @@ export default function Index() {
 
         <div className="flex flex-col">
           <Label className="pb-3" htmlFor="total-biaya">
-            Biaya per bulan
+            Total biaya per bulan (keseluruhan)
           </Label>
           <Input
+            placeholder="Total biaya langganan (Rp)"
             leftIcon={
-              <DollarSign
+              <BanknoteIcon
                 className="h-5 w-5 text-gray-400"
                 aria-hidden="true"
               />
@@ -181,9 +184,33 @@ export default function Index() {
                 noOptionsMessage={() => "Kamu bisa menambahkan orang baru"}
                 closeMenuOnSelect={false}
                 isMulti
+                isClearable={false}
               />
             )}
           </ClientOnly>
+
+          <div className="mt-3">
+            <p>
+              <span className="block">Biaya per bulan per anggota:</span>
+              <span className="text-lg pt-2 font-medium">
+                {formValues?.participants?.length ? (
+                  formValues.totalBiaya ? (
+                    `Rp ${Number(
+                      cleanNumber(formValues.totalBiaya) /
+                        formValues.participants.length
+                    ).toLocaleString("id-ID")}`
+                  ) : (
+                    <span className="text-neutral-600 text-base font-normal">
+                      (belum isi total biaya langganan)
+                    </span>
+                  )
+                ) : (
+                  0
+                )}
+              </span>
+            </p>
+          </div>
+
           <ParticipantsCheckBoxes />
 
           <div className="flex space-x-2 items-center mt-6">
@@ -206,7 +233,7 @@ export default function Index() {
                 useEditableForm.getState().resetForm();
               }}
             >
-              <RefreshCwIcon />
+              <UndoIcon />
             </Button>
           </div>
         </div>

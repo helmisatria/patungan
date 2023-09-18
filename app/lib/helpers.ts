@@ -12,3 +12,8 @@ export const MONTHS = [
   "November",
   "December",
 ];
+
+export const cleanNumber = (num: string) => {
+  // remove all . and , from string
+  return Number(num.replace(/\.|,/g, ""));
+};

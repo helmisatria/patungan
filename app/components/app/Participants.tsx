@@ -12,7 +12,7 @@ export default function ParticipantsCheckBoxes() {
   return (
     <section className="px-6 pt-4 pb-8 rounded-md border border-input mt-8 bg-white">
       <h2 className="text-2xl font-semibold text-neutral-600 mb-6">
-        Participants
+        Anggota Patungan
       </h2>
       <div className="space-y-4">
         {participants.map((participant) => (
