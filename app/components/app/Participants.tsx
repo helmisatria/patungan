@@ -11,45 +11,48 @@ export default function ParticipantsCheckBoxes() {
 
   return (
     <section className="px-6 pt-4 pb-8 rounded-md border border-input mt-8 bg-white">
-      <h2 className="text-2xl font-semibold text-neutral-600 mb-6">
+      <h2 className="text-2xl font-semibold text-neutral-600">
         Anggota Patungan
       </h2>
-      <div className="space-y-4">
-        {participants.map((participant) => (
-          <div key={participant.value}>
-            <label
-              className="block text-lg font-medium mb-2"
-              htmlFor={participant.value}
-            >
-              {participant.value}
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {MONTHS.map((month, i) => {
-                const monthNumber = i;
-                const id = `${participant.value}-month-${monthNumber}`;
 
-                return (
-                  <label
-                    className="inline-flex items-center space-x-2"
-                    htmlFor={id}
-                    key={id}
-                  >
-                    <Checkbox
-                      className={cn(
-                        monthNumber < startDateMonth && "opacity-50"
-                      )}
-                      key={i}
-                      label={month}
-                      name={participant.value}
-                      id={id}
-                    ></Checkbox>
-                  </label>
-                );
-              })}
+      {!!participants.length && (
+        <div className="space-y-4 mt-6">
+          {participants.map((participant) => (
+            <div key={participant.value}>
+              <label
+                className="block text-lg font-medium mb-2"
+                htmlFor={participant.value}
+              >
+                {participant.value}
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {MONTHS.map((month, i) => {
+                  const monthNumber = i;
+                  const id = `${participant.value}-month-${monthNumber}`;
+
+                  return (
+                    <label
+                      className="inline-flex items-center space-x-2"
+                      htmlFor={id}
+                      key={id}
+                    >
+                      <Checkbox
+                        className={cn(
+                          monthNumber < startDateMonth && "opacity-50"
+                        )}
+                        key={i}
+                        label={month}
+                        name={participant.value}
+                        id={id}
+                      ></Checkbox>
+                    </label>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
