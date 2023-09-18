@@ -12,6 +12,7 @@ import { DatePicker } from "~/components/ui/date-picker";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { cleanNumber } from "~/lib/helpers";
+import { cn } from "~/lib/utils";
 import type {
   ComparableFormStateType,
   FormStateType,
@@ -26,6 +27,12 @@ export const meta: V2_MetaFunction = () => {
   return [
     { title: "Patungan" },
     { name: "description", content: "Welcome to Patungan App!" },
+    {
+      rel: "icon",
+      type: "image/png",
+      sizes: "32x32",
+      href: "/favicon.png",
+    },
   ];
 };
 
@@ -76,13 +83,33 @@ export default function Index() {
     useEditableForm.persist.rehydrate();
 
     // set default start date if not exist
-    if (!useSavedForm.getState().startDate) {
+    if (
+      !useSavedForm.getState().startDate &&
+      !useEditableForm.getState().startDate
+    ) {
       setForm({ startDate: defaultStartDate });
     }
 
     updateIsChanged();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const noTotalCostText = (
+    <span className="text-neutral-600 text-base font-normal">
+      (isi total biaya langganan & anggota)
+    </span>
+  );
+
+  const totalCostByParticipant = `Rp 
+      ${Number(
+        cleanNumber(formValues.totalBiaya) / formValues.participants.length
+      ).toLocaleString("id-ID")}`;
+
+  const displayText = formValues?.participants?.length
+    ? formValues.totalBiaya
+      ? totalCostByParticipant
+      : noTotalCostText
+    : noTotalCostText;
 
   return (
     <>
@@ -152,7 +179,7 @@ export default function Index() {
 
         <div className="flex flex-col">
           <Label className="pb-3" htmlFor="participants">
-            Participants
+            Anggota
           </Label>
           <ClientOnly
             fallback={
@@ -192,26 +219,17 @@ export default function Index() {
           <div className="mt-3">
             <p>
               <span className="block">Biaya per bulan per anggota:</span>
-              <span className="text-lg pt-2 font-medium">
-                {formValues?.participants?.length ? (
-                  formValues.totalBiaya ? (
-                    `Rp ${Number(
-                      cleanNumber(formValues.totalBiaya) /
-                        formValues.participants.length
-                    ).toLocaleString("id-ID")}`
-                  ) : (
-                    <span className="text-neutral-600 text-base font-normal">
-                      (belum isi total biaya langganan)
-                    </span>
-                  )
-                ) : (
-                  0
-                )}
-              </span>
+              <span className="text-lg pt-2 font-medium">{displayText}</span>
             </p>
           </div>
 
-          <ParticipantsCheckBoxes />
+          <div
+            className={cn(
+              formValues.participants.length ? "opacity-100" : "opacity-50"
+            )}
+          >
+            <ParticipantsCheckBoxes />
+          </div>
 
           <div className="flex space-x-2 items-center mt-6">
             <Button
