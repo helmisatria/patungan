@@ -6,3 +6,6 @@ node_modules
 /functions/metafile.*
 /public/build
 .dev.vars
+.production.vars
+.env
+data.db

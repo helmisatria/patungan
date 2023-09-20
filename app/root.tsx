@@ -1,14 +1,8 @@
 import type { LinksFunction } from "@remix-run/cloudflare";
 import { cssBundleHref } from "@remix-run/css-bundle";
-import {
-  Links,
-  LiveReload,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-} from "@remix-run/react";
+import { Links, LiveReload, Meta, Outlet, Scripts } from "@remix-run/react";
 import styles from "./tailwind.css";
+import { Toaster } from "react-hot-toast";
 
 export const links: LinksFunction = () => [
   ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : []),
@@ -27,8 +21,8 @@ export default function App() {
       </head>
 
       <body className="bg-neutral-50">
+        <Toaster />
         <Outlet />
-        <ScrollRestoration />
         <Scripts />
         <LiveReload />
       </body>
