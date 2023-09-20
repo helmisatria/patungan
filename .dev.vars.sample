@@ -1,0 +1,7 @@
+# Database
+DATABASE_URL="libsql://"
+DATABASE_AUTH_TOKEN=""
+
+# Generate secret helper: openssl rand -hex 32
+SESSION_SECRET=""
+ENV=development
