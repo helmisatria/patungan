@@ -21,13 +21,15 @@ export function DatePicker({
   date = new Date(new Date().getFullYear(), 0, 1),
   setDate,
 }: DatePickerProps) {
-  const [localDate, setLocalDate] = React.useState<string>(
-    format(date, "d MMMM yyyy")
-  );
+  const [localDate, setLocalDate] = React.useState<string>();
+
+  const [, startTransition] = React.useTransition();
 
   React.useEffect(() => {
-    setLocalDate(format(date, "d MMMM yyyy"));
-  }, [date]);
+    startTransition(() => {
+      setLocalDate(format(date, "dd MMM yyyy"));
+    });
+  }, [date, startTransition]);
 
   return (
     <Popover>

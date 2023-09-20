@@ -6,7 +6,6 @@ import {
   useNavigate,
   useFetcher,
 } from "@remix-run/react";
-import Creatable from "react-select/creatable";
 import ParticipantsCheckBoxes from "./Participants";
 import toast from "react-hot-toast";
 import type { LoaderData } from "~/routes/_index";
@@ -23,6 +22,7 @@ import { produce } from "immer";
 import { useEditableForm, defaultStartDate } from "~/store/store-form";
 import { useFormValid } from "../hooks/use-form-valid";
 import { useState, useEffect, useRef, useMemo } from "react";
+import { SelectParticipants } from "./SelectParticipants.client";
 
 const comparableFields = [
   "appName",
@@ -37,8 +37,8 @@ export function MainForm() {
   const hydrated = useHydrated();
   const navigate = useNavigate();
   const loaderData = useLoaderData() as unknown as LoaderData;
-  const [resetIdentifier, setResetIdentifier] = useState(Date.now());
-  const isMounted = useRef(false);
+  const [, setResetIdentifier] = useState(Date.now());
+  const [isMounted, setIsMounted] = useState(false);
 
   const { subscription } = useLoaderData() as unknown as LoaderData;
 
@@ -199,7 +199,7 @@ export function MainForm() {
   }, [searchParams, hydrated]);
 
   useEffect(() => {
-    isMounted.current = true;
+    setIsMounted(true);
   }, []);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -302,37 +302,17 @@ export function MainForm() {
             <Label className="pb-3" htmlFor="participants">
               Anggota
             </Label>
+
             <ClientOnly
               fallback={
                 <div className="block h-[38px] w-full border border-input rounded"></div>
               }
             >
               {() =>
-                isMounted.current && (
-                  <Creatable
-                    key={resetIdentifier}
-                    placeholder="Isi nama yang ikut patungan disini"
-                    value={editableSubscription.participants}
-                    classNames={{
-                      control: () =>
-                        `!border-input focus-visible:outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`,
-                    }}
-                    onChange={(values) => {
-                      setEditableSubscription(
-                        produce((draft) => {
-                          draft.participants = values;
-                        })
-                      );
-                    }}
-                    styles={{
-                      valueContainer: (provided) => ({
-                        ...provided,
-                        paddingLeft: "1rem",
-                      }),
-                    }}
-                    noOptionsMessage={() => "Kamu bisa menambahkan orang baru"}
-                    closeMenuOnSelect={false}
-                    isMulti
+                isMounted && (
+                  <SelectParticipants
+                    editableSubscription={editableSubscription}
+                    setEditableSubscription={setEditableSubscription}
                   />
                 )
               }
