@@ -291,7 +291,7 @@ export function MainForm() {
               setDate={(e: any) => {
                 setEditableSubscription(
                   produce((draft) => {
-                    draft.startDate = new Date(e);
+                    draft.startDate = e ? new Date(e) : defaultStartDate;
                   })
                 );
               }}
