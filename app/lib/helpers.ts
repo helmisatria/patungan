@@ -29,3 +29,11 @@ export const cleanObject = (obj: Record<string, any>) =>
     }
     return acc;
   }, {});
+
+export function isValidUrl(url: string) {
+  try {
+    return new URL(url);
+  } catch (e) {
+    return false;
+  }
+}

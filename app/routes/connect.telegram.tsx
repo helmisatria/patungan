@@ -1,8 +1,9 @@
 import { SHA256, HmacSHA256, enc } from "crypto-js";
 import { redirect, type LoaderArgs, createCookie } from "@remix-run/cloudflare";
 import type { AppContext } from "server";
+import { sendMessage } from "~/lib/telegram-helpers";
 
-function checkTelegramAuthorization(context: AppContext, data: any) {
+async function checkTelegramAuthorization(context: AppContext, data: any) {
   const hash = data.hash;
   delete data.hash;
   const dataCheckArr = Object.keys(data)
@@ -20,6 +21,8 @@ function checkTelegramAuthorization(context: AppContext, data: any) {
     throw new Error("Data is outdated");
   }
 
+  await sendMessage(context, data.id, "You are connected to Patungan!");
+
   return data;
 }
 
@@ -28,7 +31,7 @@ export async function loader({ request, context }: LoaderArgs) {
   const params = Object.fromEntries(url.searchParams.entries());
 
   try {
-    const authData = checkTelegramAuthorization(context, params);
+    const authData = await checkTelegramAuthorization(context, params);
     const cookie = createCookie("tg_user");
 
     return redirect("/?telegram-connected=1", {

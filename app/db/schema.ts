@@ -20,6 +20,7 @@ export const subscriptions = sqliteTable("subscriptions", {
   monthlyPrice: integer("monthly_price").notNull(),
   activatedAt: text("activated_at").notNull(),
   participants: text("participants", { mode: "json" }).notNull(),
+  telegramChatId: integer("telegram_chat_id"),
   createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
