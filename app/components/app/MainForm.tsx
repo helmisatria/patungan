@@ -38,6 +38,7 @@ export function MainForm() {
   const navigate = useNavigate();
   const loaderData = useLoaderData() as unknown as LoaderData;
   const [resetIdentifier, setResetIdentifier] = useState(Date.now());
+  const isMounted = useRef(false);
 
   const { subscription } = useLoaderData() as unknown as LoaderData;
 
@@ -197,6 +198,10 @@ export function MainForm() {
     }
   }, [searchParams, hydrated]);
 
+  useEffect(() => {
+    isMounted.current = true;
+  }, []);
+
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -302,33 +307,35 @@ export function MainForm() {
                 <div className="block h-[38px] w-full border border-input rounded"></div>
               }
             >
-              {() => (
-                <Creatable
-                  key={resetIdentifier}
-                  placeholder="Isi nama yang ikut patungan disini"
-                  value={editableSubscription.participants}
-                  classNames={{
-                    control: () =>
-                      `!border-input focus-visible:outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`,
-                  }}
-                  onChange={(values) => {
-                    setEditableSubscription(
-                      produce((draft) => {
-                        draft.participants = values;
-                      })
-                    );
-                  }}
-                  styles={{
-                    valueContainer: (provided) => ({
-                      ...provided,
-                      paddingLeft: "1rem",
-                    }),
-                  }}
-                  noOptionsMessage={() => "Kamu bisa menambahkan orang baru"}
-                  closeMenuOnSelect={false}
-                  isMulti
-                />
-              )}
+              {() =>
+                isMounted.current && (
+                  <Creatable
+                    key={resetIdentifier}
+                    placeholder="Isi nama yang ikut patungan disini"
+                    value={editableSubscription.participants}
+                    classNames={{
+                      control: () =>
+                        `!border-input focus-visible:outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`,
+                    }}
+                    onChange={(values) => {
+                      setEditableSubscription(
+                        produce((draft) => {
+                          draft.participants = values;
+                        })
+                      );
+                    }}
+                    styles={{
+                      valueContainer: (provided) => ({
+                        ...provided,
+                        paddingLeft: "1rem",
+                      }),
+                    }}
+                    noOptionsMessage={() => "Kamu bisa menambahkan orang baru"}
+                    closeMenuOnSelect={false}
+                    isMulti
+                  />
+                )
+              }
             </ClientOnly>
 
             <div className="mt-3">
