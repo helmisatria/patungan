@@ -1,4 +1,4 @@
-import type { LinksFunction } from "@remix-run/cloudflare";
+import type { LinksFunction, LoaderArgs } from "@remix-run/cloudflare";
 import { cssBundleHref } from "@remix-run/css-bundle";
 import { Links, LiveReload, Meta, Outlet, Scripts } from "@remix-run/react";
 import styles from "./tailwind.css";
@@ -8,6 +8,13 @@ export const links: LinksFunction = () => [
   ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : []),
   { rel: "stylesheet", href: styles },
 ];
+export async function loader({ context }: LoaderArgs) {
+  return {
+    ENV: {
+      TELEGRAM_CALLBACK_URL: context.env.TELEGRAM_CALLBACK_URL,
+    },
+  };
+}
 
 export default function App() {
   return (

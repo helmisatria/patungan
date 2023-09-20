@@ -1,11 +1,12 @@
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData, useMatches } from "@remix-run/react";
 import { useEffect } from "react";
 import toast from "react-hot-toast";
 import { useHydrated } from "remix-utils";
 import type { LoaderData } from "~/routes/_index";
-import { useFormValid } from "../hooks/use-form-valid";
+import { useFormValid } from "../hooks/useFormValid";
 import { InfoIcon } from "lucide-react";
 import { TelegramIcon } from "../icons/telegram";
+import { useParentData } from "../hooks/useParenDate";
 
 declare global {
   interface Window {
@@ -16,6 +17,10 @@ declare global {
 export function ConnectTelegram() {
   const hydrated = useHydrated();
   const { user } = useLoaderData() as LoaderData;
+
+  const { ENV } = useParentData("/") as {
+    ENV: { TELEGRAM_CALLBACK_URL: string };
+  };
 
   const { isFormValid } = useFormValid();
 
@@ -29,14 +34,14 @@ export function ConnectTelegram() {
     script.dataset.telegramLogin = "patunganbot";
     script.dataset.size = "large";
     script.dataset.userpic = "false";
-    script.dataset.authUrl =
-      "https://patungan.helmisatria.com/connect/telegram";
+    script.dataset.authUrl = ENV.TELEGRAM_CALLBACK_URL;
     script.dataset.requestAccess = "write";
 
     // append script to body
     document.getElementById("telegram-login")?.appendChild(script);
 
     // remove script on component unmount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated, isFormValid]); // running once after initial component render
 
   function warnFillingForm() {

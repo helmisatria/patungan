@@ -20,7 +20,7 @@ import { cleanNumber, cleanObject } from "~/lib/helpers";
 import { pick, isEqual } from "lodash-es";
 import { produce } from "immer";
 import { useEditableForm, defaultStartDate } from "~/store/store-form";
-import { useFormValid } from "../hooks/use-form-valid";
+import { useFormValid } from "../hooks/useFormValid";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { SelectParticipants } from "./SelectParticipants.client";
 
