@@ -1,4 +1,4 @@
-import { createCookie, json, redirect } from "@remix-run/cloudflare";
+import { json, redirect } from "@remix-run/cloudflare";
 import type {
   V2_MetaFunction,
   LoaderArgs,
@@ -15,6 +15,8 @@ import { subscriptions } from "~/db/schema";
 import type { ComparableFormStateType } from "~/store/store-form";
 import { SchemaFormType } from "~/lib/types";
 import { eq } from "drizzle-orm";
+import { formCookie, tgCookie } from "~/services/cookies.server";
+import { pickBy } from "lodash-es";
 
 export const meta: V2_MetaFunction = () => {
   return [
@@ -32,13 +34,18 @@ export const meta: V2_MetaFunction = () => {
 export type LoaderData = {
   user?: UserSchema;
   subscription?: typeof SubscriptionType;
+  form?: {
+    appName: string;
+    totalMonthlyPrice: number;
+    participants: string;
+    startDate: string;
+  };
 };
 
 export async function loader({ request, context }: LoaderArgs) {
-  const cookie = createCookie("tg_user");
-  const user = (await cookie.parse(
-    request.headers.get("Cookie") || ""
-  )) as UserSchema;
+  const requestCookie = request.headers.get("Cookie") || "";
+  const user = (await tgCookie.parse(requestCookie)) as UserSchema;
+  const form = await formCookie.parse(requestCookie);
 
   if (user) {
     const db = getDbFromContext(context);
@@ -56,16 +63,14 @@ export async function loader({ request, context }: LoaderArgs) {
   }
 
   return json({
-    user: (await cookie.parse(
-      request.headers.get("Cookie") || ""
-    )) as UserSchema,
+    user,
+    form,
   });
 }
 
 export async function action({ request, context }: ActionArgs) {
   const formData = await request.formData();
-  const cookie = createCookie("tg_user");
-  const user = (await cookie.parse(
+  const user = (await tgCookie.parse(
     request.headers.get("Cookie") || ""
   )) as UserSchema;
 
@@ -75,33 +80,70 @@ export async function action({ request, context }: ActionArgs) {
 
   const db = getDbFromContext(context);
 
+  const serializedFormCookie = await formCookie.serialize(pickBy(data));
+  const headers = {
+    "Set-Cookie": serializedFormCookie,
+  };
+
   if (JSON.parse(data.participants as unknown as string).length === 0) {
-    return json({
-      error: "INVALID_FORM_DATA" as const,
-      data,
-    });
+    return json(
+      {
+        error: "INVALID_FORM_DATA" as const,
+        data,
+      },
+      { headers }
+    );
   }
 
   const parsedForm = SchemaFormType.safeParse(data);
 
   if (!parsedForm.success) {
-    return json({
-      error: "INVALID_FORM_DATA" as const,
-      data,
-    });
+    return json(
+      {
+        error: "INVALID_FORM_DATA" as const,
+        data,
+      },
+      { headers }
+    );
   }
 
   if (!user) {
-    return json({
-      error: null,
-    });
+    return json({ error: null }, { headers });
+  }
+
+  const createdSubscription = await db
+    .select()
+    .from(subscriptions)
+    .limit(1)
+    .where(eq(subscriptions.ownedByTelegramUsername, user.username));
+
+  if (createdSubscription.length) {
+    const updatedSubscription = await db
+      .update(subscriptions)
+      .set({
+        name: parsedForm.data.appName,
+        monthlyPrice: parsedForm.data.totalMonthlyPrice,
+        participants: data.participants,
+        activatedAt: parsedForm.data.startDate,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(subscriptions.id, createdSubscription[0].id))
+      .returning();
+
+    return json(
+      {
+        error: null,
+        data: { subscription: updatedSubscription[0] },
+      },
+      { headers }
+    );
   }
 
   const subscriptionData = await db
     .insert(subscriptions)
     .values({
       name: parsedForm.data.appName,
-      monthlyPrice: parsedForm.data.totalMonthlyCost,
+      monthlyPrice: parsedForm.data.totalMonthlyPrice,
       participants: data.participants,
       ownedByEmail: "",
       ownedByTelegramUsername: user.username,
@@ -111,12 +153,13 @@ export async function action({ request, context }: ActionArgs) {
     })
     .returning();
 
-  return json({
-    error: null,
-    data: {
-      subscription: subscriptionData[0],
+  return json(
+    {
+      error: null,
+      data: { subscription: subscriptionData[0] },
     },
-  });
+    { headers }
+  );
 }
 
 export default function Index() {

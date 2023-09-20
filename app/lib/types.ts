@@ -3,7 +3,7 @@ import { z } from "zod";
 
 export const SchemaFormType = z.object({
   appName: z.string().min(1),
-  totalMonthlyCost: z
+  totalMonthlyPrice: z
     .string()
     .min(1)
     .transform((val) => Number(val)),

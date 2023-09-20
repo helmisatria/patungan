@@ -6,7 +6,9 @@
     "build": "remix build",
     "dev": "remix dev --manual -c \"npm run start\"",
     "start": "wrangler pages dev --compatibility-date=2023-06-21 ./public",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "push:production": "NODE_ENV=production pnpm drizzle-kit push:sqlite",
+    "push:dev": "NODE_ENV=development pnpm drizzle-kit push:sqlite"
   },
   "dependencies": {
     "@libsql/client": "^0.3.4",

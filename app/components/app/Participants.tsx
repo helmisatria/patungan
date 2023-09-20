@@ -1,13 +1,28 @@
-import { useEditableForm } from "~/store/store-form";
 import { Checkbox } from "../ui/checkbox";
 import { MONTHS } from "~/lib/helpers";
 import { getMonth } from "date-fns";
 import { cn } from "~/lib/utils";
 import { InfoIcon } from "lucide-react";
 
-export default function ParticipantsCheckBoxes() {
-  const { participants, startDate, updateLogParticipant } = useEditableForm();
+export type ParticipantsProps = {
+  participants: {
+    label: string;
+    value: string;
+    logs?: number[];
+  }[];
+  startDate: Date;
+  onChangeParticipantLog: (
+    participant: string,
+    month: number,
+    value: 1 | 0
+  ) => void;
+};
 
+export default function ParticipantsCheckBoxes({
+  participants,
+  startDate,
+  onChangeParticipantLog,
+}: ParticipantsProps) {
   const startDateMonth = startDate ? getMonth(new Date(startDate)) : 99;
 
   return participants.length === 0 ? (
@@ -63,7 +78,7 @@ export default function ParticipantsCheckBoxes() {
                             id={id}
                             defaultChecked={!!participant.logs?.[monthNumber]}
                             onCheckedChange={(checked) => {
-                              updateLogParticipant(
+                              onChangeParticipantLog(
                                 participant.value,
                                 monthNumber,
                                 checked ? 1 : 0

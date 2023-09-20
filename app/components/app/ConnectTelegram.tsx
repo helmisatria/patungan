@@ -30,30 +30,13 @@ export function ConnectTelegram() {
     script.dataset.size = "large";
     script.dataset.userpic = "false";
     script.dataset.authUrl =
-      "https://olive-points-decide.loca.lt/connect/telegram";
+      "https://patungan.helmisatria.com/connect/telegram";
     script.dataset.requestAccess = "write";
 
     // append script to body
     document.getElementById("telegram-login")?.appendChild(script);
 
-    // define your callback function
-    window.onTelegramAuth = (user: any) => {
-      alert(
-        "Logged in as " +
-          user.first_name +
-          " " +
-          user.last_name +
-          " (" +
-          user.id +
-          (user.username ? ", @" + user.username : "") +
-          ")"
-      );
-    };
-
     // remove script on component unmount
-    return () => {
-      delete window.onTelegramAuth;
-    };
   }, [hydrated, isFormValid]); // running once after initial component render
 
   function warnFillingForm() {

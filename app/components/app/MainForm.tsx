@@ -1,46 +1,32 @@
 import { Label } from "@radix-ui/react-label";
 import {
-  useSubmit,
-  Form,
   useLoaderData,
-  useActionData,
   useNavigation,
   useSearchParams,
   useNavigate,
+  useFetcher,
 } from "@remix-run/react";
-import { pick, isEqual } from "lodash-es";
-import { BanknoteIcon, InfoIcon, Loader2, UndoIcon } from "lucide-react";
-import {
-  useState,
-  useCallback,
-  useEffect,
-  useRef,
-  useLayoutEffect,
-} from "react";
 import Creatable from "react-select/creatable";
+import ParticipantsCheckBoxes from "./Participants";
+import toast from "react-hot-toast";
+import type { LoaderData } from "~/routes/_index";
+import type { SubmitFormType } from "~/store/store-form";
+import { BanknoteIcon, InfoIcon, Loader2, UndoIcon } from "lucide-react";
+import { Button } from "../ui/button";
 import { ClientOnly, useHydrated } from "remix-utils";
-import { cleanNumber } from "~/lib/helpers";
-import type {
-  ComparableFormStateType,
-  FormStateType,
-} from "~/store/store-form";
-import {
-  useEditableForm,
-  useSavedForm,
-  defaultStartDate,
-} from "~/store/store-form";
 import { DatePicker } from "../ui/date-picker";
 import { Input } from "../ui/input";
-import ParticipantsCheckBoxes from "./Participants";
-import { Button } from "../ui/button";
-import toast from "react-hot-toast";
-import { useFormValid } from "../hooks/use-form-valid";
-import type { LoaderData } from "~/routes/_index";
 import { TelegramIcon } from "../icons/telegram";
+import { cleanNumber, cleanObject } from "~/lib/helpers";
+import { pick, isEqual } from "lodash-es";
+import { produce } from "immer";
+import { useEditableForm, defaultStartDate } from "~/store/store-form";
+import { useFormValid } from "../hooks/use-form-valid";
+import { useState, useEffect, useRef, useMemo } from "react";
 
 const comparableFields = [
   "appName",
-  "totalMonthlyCost",
+  "totalMonthlyPrice",
   "startDate",
   "participants",
 ];
@@ -50,73 +36,95 @@ export function MainForm() {
   const formRef = useRef<HTMLFormElement>(null);
   const hydrated = useHydrated();
   const navigate = useNavigate();
+  const loaderData = useLoaderData() as unknown as LoaderData;
+  const [resetIdentifier, setResetIdentifier] = useState(Date.now());
+
   const { subscription } = useLoaderData() as unknown as LoaderData;
 
+  const defaultFormValues = useMemo(() => {
+    return {
+      appName: subscription?.name || loaderData.form?.appName || "",
+      totalMonthlyPrice: String(
+        (subscription?.monthlyPrice || loaderData.form?.totalMonthlyPrice) ?? ""
+      )
+        .replace(/\D/g, "")
+        .replace(/\B(?=(\d{3})+(?!\d))/g, "."),
+      startDate:
+        subscription?.activatedAt || loaderData.form?.startDate
+          ? new Date(
+              subscription?.activatedAt ??
+                loaderData.form?.startDate ??
+                new Date().toISOString()
+            )
+          : defaultStartDate,
+      participants:
+        subscription?.participants || loaderData.form?.participants
+          ? JSON.parse(
+              (subscription?.participants ||
+                loaderData.form?.participants) as string
+            )
+          : [],
+    };
+  }, [loaderData.form, subscription]);
+
+  const [editableSubscription, setEditableSubscription] =
+    useState(defaultFormValues);
+
   const [isChanged, setIsChanged] = useState(false);
-  const submit = useSubmit();
-  const { setForm, saveForm, resetForm, ...formValues } = useEditableForm();
+  const fetcher = useFetcher();
+  const { setForm } = useEditableForm();
   const { isFormValid } = useFormValid();
-  const loaderData = useLoaderData() as unknown as LoaderData;
   const navigation = useNavigation();
 
-  useLayoutEffect(() => {
-    if (subscription) {
-      useEditableForm.setState({
-        appName: subscription.name,
-        participants: JSON.parse(subscription.participants as string),
-        startDate: new Date(subscription.activatedAt),
-        totalMonthlyCost: String(subscription.monthlyPrice),
-      });
-    }
-  }, []);
-
-  const { ...savedForm } = useSavedForm();
-
-  const onChangeDate = (date: Date) => {
-    setForm({ startDate: date });
-  };
+  useEffect(() => {
+    setForm(editableSubscription);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editableSubscription]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ [e.target.name]: e.target.value });
+    switch (e.target.name) {
+      case "appName":
+        setEditableSubscription(
+          produce((draft) => {
+            draft.appName = e.target.value;
+          })
+        );
+        break;
+      case "totalMonthlyPrice":
+        setEditableSubscription(
+          produce((draft) => {
+            draft.totalMonthlyPrice = e.target.value
+              .replace(/\D/g, "")
+              .replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+          })
+        );
+        break;
+      default:
+        break;
+    }
   };
 
-  const updateIsChanged = useCallback(() => {
-    const convertDate = (date: Date) => {
+  useEffect(() => {
+    const convertDate = (date: Date | string) => {
       return new Date(date).toISOString();
     };
 
-    const pickForm = (form: ComparableFormStateType) => {
+    const pickForm = (form?: SubmitFormType) => {
+      if (!form) return {};
+
       return pick(
-        { ...form, startDate: convertDate(form.startDate || defaultStartDate) },
+        { ...form, startDate: convertDate(form.startDate ?? defaultStartDate) },
         comparableFields
       );
     };
 
-    const saved = pickForm(savedForm);
-    const edited = pickForm(formValues);
+    const saved = pickForm(defaultFormValues);
+    const edited = pickForm(editableSubscription);
 
     const isEdited = !isEqual(saved, edited);
-    if (useEditableForm.persist.hasHydrated()) setIsChanged(isEdited);
-  }, [formValues, savedForm]);
-
-  useEffect(() => {
-    updateIsChanged();
-  }, [formValues, updateIsChanged]);
-
-  useLayoutEffect(() => {
-    useEditableForm.persist.rehydrate();
-
-    // set default start date if not exist
-    if (
-      !useSavedForm.getState().startDate &&
-      !useEditableForm.getState().startDate
-    ) {
-      setForm({ startDate: defaultStartDate });
-    }
-
-    updateIsChanged();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    setIsChanged(isEdited);
+  }, [defaultFormValues, editableSubscription, loaderData.form]);
 
   const noTotalCostText = (
     <span className="text-neutral-600 text-base font-normal">
@@ -126,22 +134,20 @@ export function MainForm() {
 
   const totalCostByParticipant = `Rp 
       ${Number(
-        cleanNumber(formValues.totalMonthlyCost) /
-          formValues.participants.length
+        cleanNumber(editableSubscription.totalMonthlyPrice) /
+          editableSubscription.participants.length
       ).toLocaleString("id-ID")}`;
 
-  const displayText = formValues?.participants?.length
-    ? formValues.totalMonthlyCost
+  const displayText = editableSubscription?.participants?.length
+    ? editableSubscription.totalMonthlyPrice
       ? totalCostByParticipant
       : noTotalCostText
     : noTotalCostText;
 
-  const actionData = useActionData();
-
   useEffect(() => {
-    if (actionData?.error === "INVALID_FORM_DATA") {
+    if (fetcher.data?.error === "INVALID_FORM_DATA") {
       const participants = JSON.parse(
-        actionData.data.participants as unknown as string
+        fetcher.data.data.participants as unknown as string
       );
 
       if (participants.length === 0) {
@@ -153,7 +159,7 @@ export function MainForm() {
           icon: <InfoIcon className="w-6 h-6 fill-yellow-500" />,
         });
       }
-    } else if (actionData?.error === null) {
+    } else if (fetcher.data?.error === null) {
       if (!loaderData.user) {
         toast("Data tersimpan,\nbisa connect telegram ya!", {
           icon: <TelegramIcon className="w-5 h-5" />,
@@ -175,12 +181,12 @@ export function MainForm() {
 
     const isAfterTelegramConnected =
       searchParams.get("telegram-connected") === "1";
-    if (actionData?.error === null && isAfterTelegramConnected) {
-      navigate(`/subs/${actionData?.data.subscription.id}`);
+    if (fetcher.data?.error === null && isAfterTelegramConnected) {
+      navigate(`/subs/${fetcher.data?.data.subscription.id}`);
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [actionData]);
+  }, [fetcher.data]);
 
   useEffect(() => {
     if (searchParams.get("telegram-connected") == "1") {
@@ -194,20 +200,23 @@ export function MainForm() {
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const parseFormValues = (form: ComparableFormStateType) => {
+    const parseFormValues = (form: SubmitFormType) => {
       return {
         appName: form.appName,
-        totalMonthlyCost: cleanNumber(form.totalMonthlyCost),
+        totalMonthlyPrice: form.totalMonthlyPrice
+          ? cleanNumber(form.totalMonthlyPrice)
+          : undefined,
+        participants: JSON.stringify(form.participants),
         startDate: form.startDate
           ? new Date(form.startDate).toISOString()
-          : null,
-        participants: JSON.stringify(form.participants),
+          : undefined,
       };
     };
 
-    const parsedFormValues = parseFormValues(formValues);
+    const parsedFormValues = parseFormValues(editableSubscription);
 
-    submit(parsedFormValues, {
+    fetcher.submit(cleanObject(parsedFormValues), {
+      action: "/?index",
       method: "post",
     });
   }
@@ -219,7 +228,13 @@ export function MainForm() {
           <h1 className="text-2xl font-bold">Patungan!</h1>
         </header>
 
-        <Form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
+        <fetcher.Form
+          ref={formRef}
+          onSubmit={handleSubmit}
+          action="/?index"
+          method="post"
+          className="space-y-4"
+        >
           <div className="flex flex-col">
             <Label className="pb-3" htmlFor="app-name">
               Nama aplikasi
@@ -231,8 +246,7 @@ export function MainForm() {
               name="appName"
               id="app-name"
               className="input"
-              defaultValue={subscription?.name}
-              value={formValues?.appName}
+              value={editableSubscription.appName}
             />
             <span className="text-sm mt-1 text-muted-foreground">
               Nama aplikasi yang kamu gunakan untuk patungan. Contoh: Netflix,
@@ -252,15 +266,11 @@ export function MainForm() {
                   aria-hidden="true"
                 />
               }
-              value={formValues?.totalMonthlyCost}
-              defaultValue={subscription?.monthlyPrice}
+              value={editableSubscription.totalMonthlyPrice}
               onChange={(e) => {
-                e.target.value = e.target.value
-                  .replace(/\D/g, "")
-                  .replace(/\B(?=(\d{3})+(?!\d))/g, ".");
                 handleChange(e);
               }}
-              name="totalMonthlyCost"
+              name="totalMonthlyPrice"
               type="text"
               id="total-biaya"
               className="input"
@@ -272,12 +282,14 @@ export function MainForm() {
               Patungan aktif dari
             </Label>
             <DatePicker
-              date={
-                formValues.startDate
-                  ? new Date(formValues.startDate)
-                  : defaultStartDate
-              }
-              setDate={onChangeDate}
+              date={editableSubscription.startDate}
+              setDate={(e: any) => {
+                setEditableSubscription(
+                  produce((draft) => {
+                    draft.startDate = new Date(e);
+                  })
+                );
+              }}
             />
           </div>
 
@@ -292,19 +304,19 @@ export function MainForm() {
             >
               {() => (
                 <Creatable
-                  key={formValues?.participants?.length}
-                  defaultValue={
-                    subscription?.participants || formValues?.participants
-                  }
+                  key={resetIdentifier}
                   placeholder="Isi nama yang ikut patungan disini"
+                  value={editableSubscription.participants}
                   classNames={{
                     control: () =>
                       `!border-input focus-visible:outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`,
                   }}
                   onChange={(values) => {
-                    setForm({
-                      participants: values as FormStateType["participants"],
-                    });
+                    setEditableSubscription(
+                      produce((draft) => {
+                        draft.participants = values;
+                      })
+                    );
                   }}
                   styles={{
                     valueContainer: (provided) => ({
@@ -312,12 +324,9 @@ export function MainForm() {
                       paddingLeft: "1rem",
                     }),
                   }}
-                  backspaceRemovesValue={false}
-                  createOptionPosition="first"
                   noOptionsMessage={() => "Kamu bisa menambahkan orang baru"}
                   closeMenuOnSelect={false}
                   isMulti
-                  isClearable={false}
                 />
               )}
             </ClientOnly>
@@ -329,14 +338,35 @@ export function MainForm() {
               </p>
             </div>
 
-            <ParticipantsCheckBoxes />
+            <ParticipantsCheckBoxes
+              participants={editableSubscription.participants}
+              startDate={editableSubscription.startDate}
+              onChangeParticipantLog={(participant, month, value) => {
+                setEditableSubscription(
+                  produce((draft) => {
+                    const participantIndex = draft.participants.findIndex(
+                      (p: { label: string; value: string; logs?: number[] }) =>
+                        p.value === participant
+                    );
+
+                    if (participantIndex === -1) {
+                      return;
+                    }
+
+                    if (!draft.participants[participantIndex].logs) {
+                      draft.participants[participantIndex].logs = new Array(
+                        12
+                      ).fill(0);
+                    }
+
+                    draft.participants[participantIndex].logs[month] = value;
+                  })
+                );
+              }}
+            />
 
             <div className="flex space-x-2 items-center mt-6">
               <Button
-                onClick={() => {
-                  saveForm();
-                  updateIsChanged();
-                }}
                 variant={isChanged ? "default" : "outline"}
                 className="w-full space-x-3"
                 size="xl"
@@ -344,7 +374,7 @@ export function MainForm() {
                 {navigation.state !== "idle" && (
                   <Loader2 className="w-5 h-5 text-neutral-800 animate-spin" />
                 )}
-                Simpan
+                <span>Simpan</span>
               </Button>
               <Button
                 size="icon"
@@ -352,14 +382,25 @@ export function MainForm() {
                 variant={isChanged ? "save" : "ghost"}
                 type="button"
                 onClick={() => {
-                  useEditableForm.getState().resetForm();
+                  setResetIdentifier(Date.now());
+                  if (loaderData.subscription || loaderData.form) {
+                    setEditableSubscription(
+                      produce((draft) => {
+                        draft.appName = defaultFormValues.appName;
+                        draft.totalMonthlyPrice =
+                          defaultFormValues.totalMonthlyPrice;
+                        draft.startDate = defaultFormValues.startDate;
+                        draft.participants = defaultFormValues.participants;
+                      })
+                    );
+                  }
                 }}
               >
                 <UndoIcon />
               </Button>
             </div>
           </div>
-        </Form>
+        </fetcher.Form>
       </main>
     </>
   );

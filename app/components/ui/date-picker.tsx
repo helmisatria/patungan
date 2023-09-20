@@ -21,7 +21,9 @@ export function DatePicker({
   date = new Date(new Date().getFullYear(), 0, 1),
   setDate,
 }: DatePickerProps) {
-  const [localDate, setLocalDate] = React.useState<string>();
+  const [localDate, setLocalDate] = React.useState<string>(
+    format(date, "d MMMM yyyy")
+  );
 
   React.useEffect(() => {
     setLocalDate(format(date, "d MMMM yyyy"));
