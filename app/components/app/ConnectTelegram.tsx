@@ -62,10 +62,10 @@ export function ConnectTelegram() {
   return !user && isSavedFormValid ? (
     <section className="px-6 mb-8 mx-auto max-w-2xl py-6" id="connect-telegram">
       <div className="p-5 rounded-md bg-cyan-50 border border-cyan-400">
-        <div className="h-8 w-8 mb-2 -mt-9 -ml-8 rounded bg-white">
+        <div className="h-8 w-8 mb-2 -mt-9 -ml-8 rounded-full bg-white flex items-center justify-center">
           <div className="flex items-center justify-center">
+            <TelegramIcon className="z-10 h-8 w-8 block" />
             <div className="animate-ping absolute w-6 h-6 rounded-full bg-cyan-400 bg-opacity-80"></div>
-            <TelegramIcon className="z-10" />
           </div>
         </div>
         <h2 className="text-xl font-semibold leading-6">
