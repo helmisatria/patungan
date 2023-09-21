@@ -26,6 +26,11 @@ export default function App() {
         <link rel="icon" type="image/png" href="/favicon.png" />
         <Meta />
         <Links />
+        <script
+          defer
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon='{"token": "00b224dd26484bb7b465bffa0b4f6db1"}'
+        />
       </head>
 
       <body className="bg-neutral-50">
