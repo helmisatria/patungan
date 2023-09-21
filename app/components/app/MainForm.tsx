@@ -166,13 +166,15 @@ export function MainForm() {
           icon: <TelegramIcon className="w-5 h-5" />,
         });
 
-        // scrollto #connect-telegram
-        const connectTelegram = document.getElementById("connect-telegram");
-        if (connectTelegram) {
-          connectTelegram.scrollIntoView({
-            behavior: "smooth",
-          });
-        }
+        setTimeout(() => {
+          // scrollto #connect-telegram
+          const connectTelegram = document.getElementById("connect-telegram");
+          if (connectTelegram) {
+            connectTelegram.scrollIntoView({
+              behavior: "smooth",
+            });
+          }
+        }, 1000);
       } else {
         toast.success("Data berhasil disimpan!", {
           position: "top-center",

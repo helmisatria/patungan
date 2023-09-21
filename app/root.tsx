@@ -12,6 +12,7 @@ export async function loader({ context }: LoaderArgs) {
   return {
     ENV: {
       TELEGRAM_CALLBACK_URL: context.env.TELEGRAM_CALLBACK_URL,
+      TELEGRAM_BOT_USERNAME: context.env.TELEGRAM_BOT_USERNAME,
     },
   };
 }
