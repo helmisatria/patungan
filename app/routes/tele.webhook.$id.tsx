@@ -16,6 +16,12 @@ export async function action({ request, context, params }: ActionArgs) {
   const teleResponse = (await request.json()) as TeleResponse;
   const db = getDbFromContext(context);
 
+  if (!teleResponse?.message?.text) {
+    return json({
+      response: JSON.stringify(teleResponse),
+    });
+  }
+
   const messageText = teleResponse.message.text.trim().split(" ");
   if (messageText[0] === "/reminder") {
     const url = isValidUrl(messageText[1]);

@@ -7,3 +7,4 @@ SESSION_SECRET=""
 ENV=development
 TELEGRAM_CALLBACK_URL="https://patungan.helmisatria.com"
 TELEGRAM_WEBHOOK_ID="123"
+TELEGRAM_BOT_USERNAME="dev_patunganbot"
